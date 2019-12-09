@@ -48,6 +48,17 @@ view: redshift_db_space {
       end
        ;;
   }
+  dimension: schema_user {
+    description: "Divides the load on our Redshift instance."
+    sql: CASE WHEN ${schema} ILIKE 'looker_scratch' THEN 'Looker'
+              WHEN ${schema} IN ('teamleader_fivetran_teamleader', 'crm_tracking_teamleader', 'daily_teamleader_fivetran_teamleader', 'projectplanning_fivetran_project_prod',
+                                 'datascouts_fivetran_datascouts_ecosystem_109', 's3', 'marketplace_fivetran_marketplace', 'jira_fivetran', 'gsheets', 'freshdesk_fivetran',
+                                 'data_warehouse_production', 'fivetran_deal_prediction')  THEN 'Fivetran'
+              WHEN ${schema} IN ('websites_tracking', 'webhooks', 'twilio_segment', 'planhat', 'hubspot') THEN 'Segment'
+              WHEN ${schema} IN ('chargebee_test', 'chargebee_production') THEN 'Stitch'
+              ELSE 'Other'
+              END ;;
+  }
   measure: total_megabytes {
     type: sum
     sql: ${megabytes} ;;
@@ -657,6 +668,17 @@ view: redshift_tables {
       type: string
       sql: ${TABLE}.schema ;;
     }
+  dimension: schema_performance {
+    description: "Divides the load on our Redshift instance."
+    sql: CASE WHEN ${schema} ILIKE 'looker_scratch' THEN 'Looker'
+              WHEN ${schema} IN ('teamleader_fivetran_teamleader', 'crm_tracking_teamleader', 'daily_teamleader_fivetran_teamleader', 'projectplanning_fivetran_project_prod',
+                                 'datascouts_fivetran_datascouts_ecosystem_109', 's3', 'marketplace_fivetran_marketplace', 'jira_fivetran', 'gsheets', 'freshdesk_fivetran',
+                                 'data_warehouse_production', 'fivetran_deal_prediction')  THEN 'Fivetran'
+              WHEN ${schema} IN ('websites_tracking', 'webhooks', 'twilio_segment', 'planhat', 'hubspot') THEN 'Segment'
+              WHEN ${schema} IN ('chargebee_test', 'chargebee_production') THEN 'Stitch'
+              ELSE 'Other'
+              END ;;
+  }
     dimension: table {
       group_label: " Identifiers"
       label: "Table Name"
