@@ -16,7 +16,7 @@
     - redshift_queries.time_executing_roundup5
     limit: 500
     column_limit: 50
-    query_timezone: America/Los_Angeles
+    query_timezone: CET
     stacking: ''
     show_value_labels: false
     label_density: 25

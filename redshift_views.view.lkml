@@ -399,13 +399,15 @@ view: redshift_plan_steps {
 }
 
 view: redshift_queries {
-  # Limited to last 24 hours of queries
+  # Limited to last 24 hours of queries - changed to 7 days
   derived_table: {
     datagroup_trigger: nightly
     distribution: "query"
     sortkeys: ["query"]
     sql: SELECT
         wlm.query,
+        wlm.userid,
+        u.usename,
         COALESCE(qlong.querytxt,q.substring)::varchar as text,
         SUBSTRING(
           REGEXP_REPLACE(COALESCE(qlong.querytxt,q.substring)::varchar,'^\\s*-- ([A-Za-z ]*''\\{[^}]*\\}''.|Building [^ ]+( in dev mode)? on instance [0-9a-f]+.)','')
@@ -430,7 +432,8 @@ view: redshift_queries {
       LEFT JOIN STV_WLM_SERVICE_CLASS_CONFIG sc ON sc.service_class=wlm.service_class -- Remove this line if access was not granted
       LEFT JOIN SVL_QLOG q on q.query=wlm.query
       LEFT JOIN STL_QUERY qlong on qlong.query=q.query
-      WHERE wlm.service_class_start_time >= dateadd(day,-1,GETDATE())
+      INNER JOIN SVL_USER_INFO u ON wlm.userid = u.usesysid
+      WHERE wlm.service_class_start_time >= dateadd(day,-7,GETDATE())
       AND wlm.service_class_start_time <= GETDATE()
     ;;
     #STL_QUERY vs SVL_QLOG. STL_QUERY has more characters of query text (4000), but is only retained for "2 to 5 days"
@@ -452,6 +455,21 @@ view: redshift_queries {
   dimension: snippet {
     alias: [substring]
   }
+
+  dimension: redshift_user_id {
+    hidden: yes
+    group_label: "Redshift Query Context"
+    type: number
+    sql: ${TABLE}.userid ;;
+  }
+
+  dimension: redshift_user_name {
+    hidden: no
+    group_label: "Redshift Query Context"
+    type: string
+    sql: ${TABLE}.usename ;;
+  }
+
   dimension: looker_user_id {
     group_label: "Looker Query Context"
     type: number
